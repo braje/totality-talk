@@ -9,9 +9,9 @@
     font-family: 'Volkhov', serif; !important
 }
 
-.reveal section {
-    border: 1px solid green;
-}
+/* .reveal section { */
+/*     border: 1px solid green; */
+/* } */
 
 /* .reveal code, */
 /* .reveal code > span, */
@@ -83,16 +83,6 @@
     margin-right: 0.25em;
     vertical-align: -0.4em;
 }
-
-/* .reveal section blockquote:after { */
-    /* background-color: #a9a9a9; */
-    /* content: " @pigworker"; */
-    /* content: url(../img/pigworker.jpg); */
-    /* font-size: 0.25em; */
-    /* line-height: 0.1em; */
-    /* margin-right: 0.25em; */
-    /* vertical-align: -0.4em; */
-/* } */
 
 .reveal section blockquote p:first-child,
 .reveal section blockquote p:last-child,

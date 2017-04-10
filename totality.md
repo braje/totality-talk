@@ -115,7 +115,7 @@ Board = Matrix 3 3 (Maybe Player)
 ```
 
 * Rows and columns of board indexed by size
-* Board cells contain `Maybe Player`
+* Board cells contain `Maybe Player`{.idris}
 
 ## Playing a Piece
 
