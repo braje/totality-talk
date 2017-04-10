@@ -122,23 +122,24 @@ tictactoe b =
                            Win X  => Quit XWin
                            Win O  => Quit XLose
                            Draw   => Quit NoWinner
-                           InPlay =>
-                             case computerPlay b of
-                               Nothing => do PutStr "That's weird!\n"
-                                             Quit Quitter
-                               Just b' => case gameRes b' of
-                                             Win X  => Quit XWin
-                                             Win O  => Quit XLose
-                                             Draw   => Quit NoWinner
-                                             InPlay => tictactoe b'
+                           InPlay => computerPlay' b
        Done      => Quit Quitter
-       Oops      => do PutStr "You mistyped.  Let's try again"
+       Oops      => do PutStr "You mistyped.  Let's try again\n"
                        tictactoe b
+   where computerPlay' : Board -> ConsoleIO Result
+         computerPlay' b =
+           case computerPlay b of
+             Nothing => do PutStr "That's weird!\n"
+                           Quit Quitter
+             Just b' => case gameRes b' of
+                          Win X  => Quit XWin
+                          Win O  => Quit XLose
+                          Draw   => Quit NoWinner
+                          InPlay => tictactoe b'
 
 main : IO ()
 main = do
-  putStrLn "How about a nice game of tic tac toe?"
-  putStrLn "\n"
+  putStrLn "How about a nice game of tic tac toe?\n\n"
   result <- runConsoleIO (tank 1000) (tictactoe mkEmptyBoard)
   putStrLn "\n"
   case result of

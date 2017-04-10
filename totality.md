@@ -38,29 +38,24 @@ maxScale: 3.0
 ## Outline
 
 * Definitions
-     * Turing Completeness
+     * Turing Machines, etc.
      * Totality
-     * Termination (Halting Problem)
-* Implementing a Game, Responsibly
-* Interpreting a Turning Machine, Formally
+* Implementing an Interactive Game, Responsibly
+* Interpreting a Turing Machine, Formally
 
 # Class Time {data-background-image="img/school-time.png"}
 
-## Turing Completeness
+## Turing Machines & Completeness
 
  * ...
 
-## Totality, Informally
+## Totality
 
- * (from TDD)
+A _total_ function, for _well-typed_ inputs either:
 
-## Totality, Formally
+ * *Terminating* - Terminates with a well-typed result
+ * *Productive* - Produces a well-typed finite prefix of a well-typed infinite result in finite time
 
- * There are _expressions_ and _types_
- * Some expressions are _values_
- * Expressions reduce unless they are _values_
- * Every reduction sequence starting from a _well typed expression_ is finite
- * A _well typed_ expression eventually reduces to exactly one _value_
 
 ## Partiality, Through Examples
 
@@ -76,11 +71,7 @@ interface List<A> {
 }
 ```
 
-## ...But Servers
-
-"If all programs terminate, how do we write an operating system?"
-
-## Codata
+## Codata -- What It Means to be Productive
 
 <!-- ```{.idris} -->
 <!-- codata Stream a where -->
@@ -96,7 +87,7 @@ data Stream a where
 ```{.idris}
 total
 ones : Stream Int
-ones = 1 :> ones
+ones = 1 :: ones
 ```
 ```{.idris}
 partial
@@ -131,14 +122,14 @@ Board = Matrix 3 3 (Maybe Player)
 ```{.idris .numberLines}
 idxMat : Fin n -> Fin m -> Matrix n m a -> a
 idxMat r c m = index c (index r m)
-
-tryPlayPiece  : Fin 3 -> Fin 3 -> Player -> Board -> Maybe (Board,Bool)
+ 
+tryPlayPiece  : Fin 3 -> Fin 3 -> Player -> Board -> Maybe Board
 tryPlayPiece r c p b =
   case idxMat r c b of
     Just _  => Nothing
     Nothing =>
       let newBoard = playPiece r c p b
-      in  Just (newBoard, isWin p newBoard)
+      in  Just newBoard
   where playPiece : Fin 3 -> Fin 3 -> Player -> Board -> Board
         playPiece row col pc board =
           let theRow = index row board
@@ -160,7 +151,7 @@ run (Do action cont) =
      run (cont res)
 ```
 
-* Infinite sequence of `IO` actions
+* Infinite sequence of `IO`{.haskell} actions
 * Can only run in partial context
 
 ## Need a Little Fuel
@@ -176,7 +167,7 @@ tank (S n) = More (tank n)
 * Define some notion of 'willingness to wait'
 * Fill tank as much as we want
 
-## Running With Fuel
+## Running With Fuel, Totally
 
 ```{.idris .numberLines}
 runWithFuel : Fuel -> InfIO -> IO ()
@@ -207,25 +198,25 @@ data GameIO : Type -> Type where
   Do : GameCmnd a -> (a -> Inf (GameIO b)) -> GameIO b
 ```
 
-* Define what parts of `IO` we allow access to
+* Define what parts of `IO`{.idris} we allow access to
 * Allow programmer to build up programs that use that algebra
 
-## Need to Interpret `GameCmnd`
+## Interpreter for `GameCmnd`{.haskell}
 
 ```{.idris .numberLines}
 runGameCmnd : GameCmnd a -> IO a
-runGameCmnd (PutStr s)     = putStr s
-runGameCmnd GetLine        = getLine
+runGameCmnd (PutStr s) = putStr s
+runGameCmnd GetLine    = getLine
 runGameCmnd (Pure a)   = pure a
 runGameCmnd (Bind c f) =
   do res <- runGameCmnd c
      runGameCmnd (f res)
 ```
 
-* Execute `GameCmnd` within `IO`
-* We know we are safe from other `IO` actions!
+* Execute `GameCmnd`{.idris} within `IO`{.idris}
+* We know we are safe from other `IO`{.idris} actions!
 
-## Running our Game
+## Running the Action Stream
 
 ```{.idris .numberLines}
 runGameIO : Fuel -> GameIO a -> IO (Maybe a)
@@ -238,10 +229,35 @@ runGameIO (More f) (Do cmnd cont) =
      runGameIO f (cont res)
 ```
 
-## Define the Game
+* Bored yet?
+
+## Sanitizing User Input
 
 ```{.idris .numberLines}
-tictactoe : Board -> GameIO Result
+data Input
+  = Index (Fin 3) (Fin 3)
+  | Done
+  | Oops
+
+parseFin : String -> Maybe (Fin 3)
+parseFin s = parseInteger s >>= \i => integerToFin i 3
+
+readInput : ConsoleCmnd Input
+readInput =
+  do PutStr "\nEnter row and column indices separated by a space, q to quit: "
+     rowS <- GetLine
+     case span (/= ' ') rowS of
+       ("q","")  => Pure Done
+       (row,col) =>
+         case (parseFin row, parseFin col) of
+           (Just r, Just c) => Pure (Index r c)
+           _                => Pure Oops
+```
+
+## Define the Game Play
+
+```{.idris .numberLines}
+tictactoe : Board -> ConsoleIO Result
 tictactoe b =
   do PutStr "The current state of affairs:\n\n"
      printBoard b
@@ -251,36 +267,34 @@ tictactoe b =
          case (tryPlayPiece r c X b) of
            Nothing => do PutStr "You can't write on top of another player's piece!\n"
                          tictactoe b
-           Just (b, True)  => do printBoard b
-                                 Quit Win
-           Just (b, False) =>
-             case computerPlay b of
-               Nothing => do PutStr "That's weird!\n"
-                             Quit Quitter
-               Just (b', True)   => do printBoard b'
-                                       Quit Lose
-               Just (b', False) => tictactoe b'
+           Just b  => do printBoard b
+                         case gameRes b of
+                           Win X  => Quit XWin
+                           Win O  => Quit XLose
+                           Draw   => Quit NoWinner
+                           InPlay => computerPlay' b
        Done      => Quit Quitter
-       Oops      => do PutStr "You mistyped.  Let's try again"
+       Oops      => do PutStr "You mistyped.  Let's try again\n"
                        tictactoe b
 ```
 
-* Note: We are building up a potentially infinite sequence of `GameCmnd`s, so we are allowed to recurse naturally
+* Note: We are building up a potentially infinite sequence of `GameCmnd`{.idris}s, so we are allowed to recurse naturally
 
 ## Finally, Main()
 
 ```{.idris .numberLines}
 main : IO ()
 main = do
-  putStrLn "How about a nice game of tic tac toe?"
-  putStrLn "\n"
-  result <- runGameIO (tank 1000) (tictactoe mkEmptyBoard)
+  putStrLn "How about a nice game of tic tac toe?\n\n"
+  result <- runConsoleIO (tank 1000) (tictactoe mkEmptyBoard)
   putStrLn "\n"
   case result of
-    Nothing      => putStrLn "Goodbye."
-    Just Win     => putStrLn "Congratulations, you win!"
-    Just Lose    => putStrLn "Sorry, you lose!"
-    Just Quitter => putStrLn "Why you quit?"
+    Nothing       => putStrLn "Goodbye."
+    Just XWin     => putStrLn "Congratulations, you win!"
+    Just XLose    => putStrLn "Sorry, you lose!"
+    Just NoWinner => putStrLn "Game is a draw!"
+    Just Quitter  => putStrLn "Why you quit?"
+  putStrLn "\n"
 ```
 
 # Turing Machines, Totally {data-background-image="img/ivory-tower.jpg"}
@@ -291,19 +305,14 @@ main = do
 
 ## Summary
 
-* Co-constructors make patterns, not values
-* Interactive systems have episodoc evaluation
+* Codata make total languages Turing Complete
+* The user decides how to interact with an _unfold_
 * _Types_ can document possible interaction with the environment
 * _Types_ document risk
 * To argue for undocumented risk is to insist on ignorance of safety
 
-## Q.E.D.
-
-* Codata make total languages Turning complete
-* The user decides how to interact with an _unfold_
-* Do anything you like, making weak promises
-* Do some things making strong promises
-* You can write an interpreter for a total language in itself, you just can't prove it converges
-
 ## References
 
+* [Totality vs. Turing Completeness? (Conor McBride)](https://personal.cis.strath.ac.uk/conor.mcbride/pub/Totality.pdf)
+* [Type Driven Develoopment (Edwin Brady)](https://www.manning.com/books/type-driven-development-with-idris)
+* [Introduction to the Theory of Computation (Michael Sipser)](http://www.cengage.com/c/introduction-to-the-theory-of-computation-3e-sipser/9781133187790)
