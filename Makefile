@@ -16,7 +16,7 @@ publish: index.html
 	git branch -D gh-pages || true
 	git push origin :gh-pages || true
 	git checkout --orphan gh-pages
-	git rm -rf *.md .gitignore .gitmodules reveal.js/.git
+	git rm -rf *.md .gitignore .gitmodules
 	git add index.html
 	git add reveal.js
 	git commit -am"Publish new site"
