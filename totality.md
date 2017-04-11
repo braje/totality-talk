@@ -23,7 +23,7 @@ maxScale: 3.0
 ## Introduction
 ### Totality vs. Turing Completeness
 
-> Advocates of Total Functional Programming ... can prove prone to a false confession, namely that the price of functions which function is the loss of Turing-completeness.  In a total language, to construct `f: S -> T` is to promise a canonical `T` eventually, given a cononical `S`.
+> Advocates of Total Functional Programming ... can prove prone to a false confession, namely that the price of functions which function is the loss of Turing-completeness.  In a total language, to construct `f: S -> T`{.idris} is to promise a canonical `T`{.idris} eventually, given a cononical `S`{.idris}.
 
 [Source: Totality vs. Turing Completeness?]{.footnote}
 
@@ -59,9 +59,12 @@ maxScale: 3.0
 
 A _total_ function, for _well-typed_ inputs either:
 
- * *Terminating* - Terminates with a well-typed result
- * *Productive* - Produces a well-typed finite prefix of a well-typed infinite result in finite time
+Terminating
+ : Terminate with a well-typed result
 
+Productive 
+ : Produces a well-typed finite prefix of a well-typed infinite result in finite time
+ 
 [Source: Type Driven Developemt]{.footnote}
 
 ## Partiality, Through Examples
@@ -101,6 +104,8 @@ partial
 onesBad : List Int
 onesBad = 1 :: onesBad
 ```
+
+* Quiz: What's the difference between `ones` and `onesBad`??
 
 # How about a nice game of Tic-Tac-Toe? {data-background-image="img/POP_Bolt_range_02.png"}
 
@@ -164,7 +169,7 @@ run (Do action cont) =
 ## Need a Little Fuel
 
 ```{.idris .numberLines}
-data Fuel = Dry | More Fuel
+data Fuel = Dry | More (Lazy Fuel)
 
 tank : Nat -> Fuel
 tank    Z  = Dry
@@ -306,7 +311,57 @@ main = do
 
 # Turing Machines, Totally {data-background-image="img/ivory-tower.jpg"}
 
-## G
+## Strategy
+
+* Weaken the promise: 
+     * `f: S -> T`{.idris} to `f: S -> G T`{.idris}
+     * `G`{.idris} is a suitable monad
+* Transform `G`{.idris} to some `M`{.idris} at execution time
+     * `M`{.idris} represents some notion of "infinite computation"
+
+## Request-Response Trees
+
+```{.numberLines .idris}
+data General : (S: Type) -> (T: S -> Type) -> (X : Type) -> Type where
+  Res   : x -> General s t x
+  Req   : {S : Type} -> (s: S) -> (t s -> General S t x) -> General S t x
+```
+
+## Building up Recursive Functions
+
+```{.numberLines .idris}
+call : {S: Type} -> (s:S) -> General S t (t s)
+call s = s `Req` Res
+
+PiG : (S : Type) -> (T: S -> Type) -> Type
+PiG S T = (s : S) -> General S T (T s)
+```
+
+* `call`{.idris} represents one step of recursion
+* `PiG`{.idris} represents the type of function which delivers 
+  the recursive strategy for computing a `T s`{.idris} from some `s : S`{.idris}
+
+## Finally, Turing Machines
+
+```{.numberLines .idris}
+halting : (s -> Bool) -> (s -> s) -> PiG s (const s)
+halting stop step start with (stop start)
+                         | True  = Res start
+                         | False = call (step start)
+```
+
+* `halting`{.idris} computes the halting state of a Turing Machine given:
+     * Initial state
+     * One state transition function
+     * Predicate which determines whether state is a halting state
+
+## Rash Promises
+
+> We can clearly explain how any old Turing machine computes without stepping beyond the confines of total programming, and without making any rash promises about what values such a computation might deliver.
+
+* To run, you need to choose an `M`{.idris}
+* We have seen one choice for `M`{.idris}
+* There are others!
 
 # {data-background-image="img/LandinComputerScience.jpg"}
 
