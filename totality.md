@@ -25,15 +25,21 @@ maxScale: 3.0
 
 > Advocates of Total Functional Programming ... can prove prone to a false confession, namely that the price of functions which function is the loss of Turing-completeness.  In a total language, to construct `f: S -> T` is to promise a canonical `T` eventually, given a cononical `S`.
 
+[Source: Totality vs. Turing Completeness?]{.footnote}
+
 ## Introduction
 ### Languages as Evidence
 
 > Total functional languages remain _logically_ incomplete in the sense of Gödel ... the argument for general recursion asserts that logical inconsistency is a price worth paying for logical completeness, notwithstanding the loss of the language's value as _evidence_.
 
+[Source: Totality vs. Turing Completeness?]{.footnote}
+
 ## Introduction
 ### Dishonesty
 
 > Programmers are free to maintain that such _dishonesty_ is essential to their capacity to earn a living, but a new generation of programming technology enables some of us to offer and deliver a higher standard of guarantee.  _Faites vos jeus!_
+
+[Source: Totality vs. Turing Completeness?]{.footnote}
 
 ## Outline
 
@@ -56,6 +62,7 @@ A _total_ function, for _well-typed_ inputs either:
  * *Terminating* - Terminates with a well-typed result
  * *Productive* - Produces a well-typed finite prefix of a well-typed infinite result in finite time
 
+[Source: Type Driven Developemt]{.footnote}
 
 ## Partiality, Through Examples
 
@@ -310,6 +317,12 @@ main = do
 * _Types_ can document possible interaction with the environment
 * _Types_ document risk
 * To argue for undocumented risk is to insist on ignorance of safety
+
+## Summary
+
+> the key message of this paper is that the status of general recursive definitions is readily negotiable within a total framework.  There is no need to give up on the ability either to execute potentially nonterminating computations or to be trustably total.  There is no difference between what you can _do_ with a partial language an what you can _do_ with a total language: the difference is in what you can _know_.  The time for willful ignorance is over.
+
+[Source: Totality vs. Turing Completeness?]{.footnote}
 
 ## References
 

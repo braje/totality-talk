@@ -60,6 +60,17 @@
 }
 
 /*********************
+ *  Footnotes
+ *********************/
+
+.reveal .footnote {
+    position: absolute;
+    font-size: medium;
+    right: 0px;
+    bottom: -2em;
+}
+
+/*********************
  *  Block Quotes
  *********************/
 
