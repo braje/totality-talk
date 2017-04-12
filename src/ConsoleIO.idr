@@ -36,8 +36,8 @@ namespace CommandDo
 
 export
 runConsoleCmnd : ConsoleCmnd a -> IO a
-runConsoleCmnd (PutStr s)     = putStr s
-runConsoleCmnd GetLine        = getLine
+runConsoleCmnd (PutStr s) = putStr s
+runConsoleCmnd GetLine    = getLine
 runConsoleCmnd (Pure a)   = pure a
 runConsoleCmnd (Bind c f) =
   do res <- runConsoleCmnd c

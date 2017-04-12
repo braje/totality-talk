@@ -228,47 +228,47 @@ runWithFuel (More f) (Do act cont)
 ## Honesty is also About Precision
 
 ```{.idris .numberLines}
-data GameCmnd : Type -> Type where
-  PutStr : String -> GameCmnd ()
-  GetLine : GameCmnd String
+data ConsoleCmnd : Type -> Type where
+  PutStr : String -> ConsoleCmnd ()
+  GetLine : ConsoleCmnd String
   
-  Pure : a -> GameCmnd a
-  Bind : GameCmnd a -> (a -> GameCmnd b) -> GameCmnd b
+  Pure : a -> ConsoleCmnd a
+  Bind : ConsoleCmnd a -> (a -> ConsoleCmnd b) -> ConsoleCmnd b
   
-data GameIO : Type -> Type where
-  Quit : a -> GameIO a
-  Do : GameCmnd a -> (a -> Inf (GameIO b)) -> GameIO b
+data ConsoleIO : Type -> Type where
+  Quit : a -> ConsoleIO a
+  Do : ConsoleCmnd a -> (a -> Inf (ConsoleIO b)) -> ConsoleIO b
 ```
 
 * Define what parts of `IO`{.idris} we allow access to
 * Allow programmer to build up programs that use that algebra
 
-## Interpreter for `GameCmnd`{.haskell}
+## Interpreter for `ConsoleCmnd`{.haskell}
 
 ```{.idris .numberLines}
-runGameCmnd : GameCmnd a -> IO a
-runGameCmnd (PutStr s) = putStr s
-runGameCmnd GetLine    = getLine
-runGameCmnd (Pure a)   = pure a
-runGameCmnd (Bind c f) =
-  do res <- runGameCmnd c
-     runGameCmnd (f res)
+runConsoleCmnd : ConsoleCmnd a -> IO a
+runConsoleCmnd (PutStr s) = putStr s
+runConsoleCmnd GetLine    = getLine
+runConsoleCmnd (Pure a)   = pure a
+runConsoleCmnd (Bind c f) =
+  do res <- runConsoleCmnd c
+     runConsoleCmnd (f res)
 ```
 
-* Execute `GameCmnd`{.idris} within `IO`{.idris}
+* Execute `ConsoleCmnd`{.idris} within `IO`{.idris}
 * We know we are safe from other `IO`{.idris} actions!
 
 ## Running the Action Stream
 
 ```{.idris .numberLines}
-runGameIO : Fuel -> GameIO a -> IO (Maybe a)
-runGameIO _ (Quit a) = pure (Just a)
-runGameIO Dry _      =
+runConsoleIO : Fuel -> ConsoleIO a -> IO (Maybe a)
+runConsoleIO _ (Quit a) = pure (Just a)
+runConsoleIO Dry _      =
   do putStrLn "Out of fuel"
      pure Nothing
-runGameIO (More f) (Do cmnd cont) =
-  do res <- runGameCmnd cmnd
-     runGameIO f (cont res)
+runConsoleIO (More f) (Do cmnd cont) =
+  do res <- runConsoleCmnd cmnd
+     runConsoleIO f (cont res)
 ```
 
 ## Sanitizing User Input
@@ -278,10 +278,10 @@ data Input
   = Index (Fin 3) (Fin 3)
   | Done
   | Oops
-
+ 
 parseFin : String -> Maybe (Fin 3)
 parseFin s = parseInteger s >>= \i => integerToFin i 3
-
+ 
 readInput : ConsoleCmnd Input
 readInput =
   do PutStr "\nEnter row and column indices separated by a space, q to quit: "
@@ -318,7 +318,7 @@ tictactoe b =
                        tictactoe b
 ```
 
-* Note: We are building up a potentially infinite sequence of `GameCmnd`{.idris}s, so we are allowed to recurse naturally
+* Building potentially infinite sequence of `ConsoleCmnd`{.idris}s, allowed to recurse naturally
 
 ## Finally, Main()
 
