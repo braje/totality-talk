@@ -26,9 +26,21 @@
  *  Code
  *********************/
 
+/* .reveal pre.sourceCode.left { */
+/*     display: inline-block; */
+/*     min-width: 49%; */
+/*     float: left; */
+/* } */
+
+/* .reveal pre.sourceCode.right { */
+/*     display: inline-block; */
+/*     min-width: 49%; */
+/*     float: right; */
+/* } */
+
 .reveal div.sourceCode {
-    display: block;
-    /* min-width: 51%; */
+    display: inline-block;
+    min-width: 75%;
     /* max-width: 100%; */
 }
 

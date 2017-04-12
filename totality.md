@@ -20,22 +20,21 @@ minScale: 0.5
 maxScale: 3.0
 ...
 
-## Introduction
-### Totality vs. Turing Completeness
+# Introduction
+
+## Totality vs. Turing Completeness
 
 > Advocates of Total Functional Programming ... can prove prone to a false confession, namely that the price of functions which function is the loss of Turing-completeness.  In a total language, to construct `f: S -> T`{.idris} is to promise a canonical `T`{.idris} eventually, given a cononical `S`{.idris}.
 
 [Source: Totality vs. Turing Completeness?]{.footnote}
 
-## Introduction
-### Languages as Evidence
+## Languages as Evidence
 
 > Total functional languages remain _logically_ incomplete in the sense of Gödel ... the argument for general recursion asserts that logical inconsistency is a price worth paying for logical completeness, notwithstanding the loss of the language's value as _evidence_.
 
 [Source: Totality vs. Turing Completeness?]{.footnote}
 
-## Introduction
-### Dishonesty
+## Dishonesty
 
 > Programmers are free to maintain that such _dishonesty_ is essential to their capacity to earn a living, but a new generation of programming technology enables some of us to offer and deliver a higher standard of guarantee.  _Faites vos jeus!_
 
@@ -51,9 +50,34 @@ maxScale: 3.0
 
 # Class Time {data-background-image="img/school-time.png"}
 
-## Turing Machines & Completeness
+## Turing Machines, Informally
 
- * ...
+ * Infinite tape (memory)
+ * Tape head -- read/write symbols on tape, move around 
+ * Decide whether in accept or reject state, otherwise continue
+
+[Introduction the the Theory of Computation]{.footnote}
+
+## Turing Machine, Formally
+
+0. Q, Σ, Γ are all finite sets
+1. Q is the set of states
+2. Σ is the input alphabet not containing the blank symbol
+3. Γ is the tape alphabet, where blank ∈ Γ and Σ ⊆ Γ
+4. δ : Q × Γ -> Q × Γ × {L, R} is the transition function,
+5. q0,qaccept,qreject ∈ Q are start, accept, and reject states
+
+[Introduction the the Theory of Computation]{.footnote}
+
+## Turing Completeness
+
+Universal Turing Machine
+: A Turing machine that can simulate any other
+
+Turing Completeness
+: A computational system that can simulate any Turing machine
+
+[Wikipedia](https://en.wikipedia.org/wiki/Turing_completeness){.footnote}
 
 ## Totality
 
@@ -70,23 +94,23 @@ Productive
 ## Partiality, Through Examples
 
 ```{.java .numberLines}
-interface Map<K,V> {
-  V get(Object) k);
-  V remove(Object) k);
-}
-
-interface List<A> {
-  A get(int i);
-  int indexOf(Object o);
+interface Map<K,V> {        interface List<A> {
+  V get(Object) k);           A get(int i);
+  V remove(Object) k);        int indexOf(Object o);
+}                           }
+ 
+// arrays, ugh!
+a[i]
+ 
+interface OutputStream {
+  void write(byte[] b) throws IOException;
+  void write(byte[] b, int off, int len) throws IOException;
+  void close() throws IOException; 
 }
 ```
 
 ## Codata -- What It Means to be Productive
 
-<!-- ```{.idris} -->
-<!-- codata Stream a where -->
-<!--   (:>) : a -> Stream a -> Stream a -->
-<!-- ``` -->
 ```{.idris}
 data Stream a where
   (::) : a -> Inf (Stream a) -> Stream a
@@ -129,12 +153,18 @@ Board = Matrix 3 3 (Maybe Player)
 * Rows and columns of board indexed by size
 * Board cells contain `Maybe Player`{.idris}
 
-## Playing a Piece
+## Responsible Indexing
 
 ```{.idris .numberLines}
 idxMat : Fin n -> Fin m -> Matrix n m a -> a
 idxMat r c m = index c (index r m)
- 
+```
+
+* Index into board with appropriately sized numbers
+
+## Playing a Piece
+
+```{.idris .numberLines}
 tryPlayPiece  : Fin 3 -> Fin 3 -> Player -> Board -> Maybe Board
 tryPlayPiece r c p b =
   case idxMat r c b of
@@ -148,7 +178,7 @@ tryPlayPiece r c p b =
           in  replaceAt row (replaceAt col (Just pc) theRow) board
 ```
 
-* Index into board with appropriately sized numbers
+* No way we can go wrong!
 
 ## Interact with Console, Try 1
 
@@ -240,8 +270,6 @@ runGameIO (More f) (Do cmnd cont) =
   do res <- runGameCmnd cmnd
      runGameIO f (cont res)
 ```
-
-* Bored yet?
 
 ## Sanitizing User Input
 
@@ -338,8 +366,7 @@ PiG S T = (s : S) -> General S T (T s)
 ```
 
 * `call`{.idris} represents one step of recursion
-* `PiG`{.idris} represents the type of function which delivers 
-  the recursive strategy for computing a `T s`{.idris} from some `s : S`{.idris}
+* `PiG`{.idris} -- the type of function which delivers the recursive strategy
 
 ## Finally, Turing Machines
 
@@ -363,7 +390,19 @@ halting stop step start with (stop start)
 * We have seen one choice for `M`{.idris}
 * There are others!
 
+[Source: Totality vs. Turing Completeness?]{.footnote}
+
 # {data-background-image="img/LandinComputerScience.jpg"}
+
+## References
+
+* [Totality vs. Turing Completeness? (Conor McBride)](https://personal.cis.strath.ac.uk/conor.mcbride/pub/Totality.pdf)
+
+* [Type Driven Development (Edwin Brady)](https://www.manning.com/books/type-driven-development-with-idris)
+
+* [Introduction to the Theory of Computation (Michael Sipser)](http://www.cengage.com/c/introduction-to-the-theory-of-computation-3e-sipser/9781133187790)
+
+* Slides and code at: [https://github.com/braje/totality-talk](https://github.com/braje/totality-talk)
 
 ## Summary
 
@@ -378,9 +417,3 @@ halting stop step start with (stop start)
 > the key message of this paper is that the status of general recursive definitions is readily negotiable within a total framework.  There is no need to give up on the ability either to execute potentially nonterminating computations or to be trustably total.  There is no difference between what you can _do_ with a partial language an what you can _do_ with a total language: the difference is in what you can _know_.  The time for willful ignorance is over.
 
 [Source: Totality vs. Turing Completeness?]{.footnote}
-
-## References
-
-* [Totality vs. Turing Completeness? (Conor McBride)](https://personal.cis.strath.ac.uk/conor.mcbride/pub/Totality.pdf)
-* [Type Driven Develoopment (Edwin Brady)](https://www.manning.com/books/type-driven-development-with-idris)
-* [Introduction to the Theory of Computation (Michael Sipser)](http://www.cengage.com/c/introduction-to-the-theory-of-computation-3e-sipser/9781133187790)
